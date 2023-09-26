@@ -513,8 +513,21 @@ func (nav *nav) checkDir(dir *dir) {
 		return
 	}
 
+	// iterate through all files and check if they are newer then dir.loadtime
+	files, err := readdir(dir.path)
+	if err != nil {
+		log.Printf("reading directory: %s", err)
+	}
+	fileUpdated := false
+	for _, file := range files {
+		if file.changeTime.After(dir.loadTime) {
+			fileUpdated = true
+			break
+		}
+	}
+	
 	switch {
-	case s.ModTime().After(dir.loadTime):
+	case s.ModTime().After(dir.loadTime), fileUpdated:
 		now := time.Now()
 
 		// XXX: Linux builtin exFAT drivers are able to predict modifications in the future
